@@ -6,7 +6,7 @@ A naive implementation could build a `Gravity` system that walks over all entiti
 ## OnDemand systems
 To address n-body elegantly, we'd ideally reuse how reflecs matches entities against systems to get our list of entities. Instead of matching individual entities, reflecs matches systems with groups of entities that share the same components ("tables"). We can reuse this logic by using `OnDemand` systems. `OnDemand` systems are matched to entities just like normal systems, except that they are invoked manually with the `ecs_run_system` function, instead of for every `ecs_progress`, as is the case with `EcsPeriodic`.
 
-Another nice feature of OnDemand systems is that we can pass information to the system that we store on stack. This keeps all data localized, which makes it likely that the code runs efficiently on multiple threads.
+Another nice feature of `OnDemand` systems is that we can pass information to the system that is stored on stack. This keeps all data localized, which makes it likely that the code runs efficiently on multiple threads. The example uses this to pass between the `Visit` and `Gravity` systems.
 
 With these building blocks, we define the following systems:
 
