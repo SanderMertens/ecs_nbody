@@ -1,9 +1,7 @@
-#include <include/ecs_nbody.h>
 #include <reflecs/reflecs.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <corto/corto.h>
 
 #define NBODIES (6000)
 
