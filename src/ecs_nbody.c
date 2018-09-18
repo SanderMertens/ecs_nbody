@@ -3,9 +3,8 @@
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <corto/corto.h>
 
-#define NBODIES (6000)
+#define NBODIES (24000)
 
 /* Components */
 
@@ -94,7 +93,6 @@ void Move(void *data[], EcsInfo *info)
     Speed *speed = data[1];
     position->x += speed->x;
     position->y += speed->y;
-    printf("%f, %f\n", position->x, position->y);
 }
 
 int main(int argc, char *argv[]) {
@@ -122,9 +120,11 @@ int main(int argc, char *argv[]) {
         ecs_commit(world, e);
     }
 
-    while (true) {
-        ecs_progress(world);
-    }
+    ecs_set_threads(world, 10);
+
+    ecs_progress(world);
+
+    ecs_fini(world);
 
     return 0;
 }
