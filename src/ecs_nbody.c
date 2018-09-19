@@ -3,7 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define NBODIES (26000)
+#define NBODIES (100000)
+#define NTHREADS (12)
 
 typedef struct Vector2D {
     float x;
@@ -53,7 +54,7 @@ void Gravity(void *data[], EcsInfo *info)
 
     if (info->entity != param->me) {
         Position *position = data[0];
-        Mass *mass = data[2];
+        Mass *mass = data[1];
         float diff_x = param->position->x - position->x;
         float diff_y = param->position->y - position->y;
         float distance = diff_x * diff_x + diff_y * diff_y;
@@ -111,7 +112,7 @@ int main(int argc, char *argv[]) {
     ECS_SYSTEM(world, Init, EcsOnInit, Position, Velocity, Mass);
     ECS_SYSTEM(world, Visit, EcsPeriodic, Position, Velocity, Mass);
     ECS_SYSTEM(world, Move, EcsPeriodic, Position, Velocity);
-    ECS_SYSTEM(world, Gravity, EcsOnDemand, Position, Velocity, Mass);
+    ECS_SYSTEM(world, Gravity, EcsOnDemand, Position, Mass);
 
     /* Set world context. This lets us use the Gravity system from Visit */
     ctx.gravity = Gravity_h;
@@ -128,7 +129,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* Use multiple threads for processing the data */
-    ecs_set_threads(world, 12);
+    ecs_set_threads(world, NTHREADS);
 
     /* Do a single iteration */
     ecs_progress(world);
