@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define NBODIES (24000)
+#define NBODIES (26000)
 
 /* Components */
 
@@ -90,8 +90,8 @@ void Move(void *data[], EcsInfo *info)
 {
     Position *position = data[0];
     Speed *speed = data[1];
-    position->x += speed->x;
-    position->y += speed->y;
+    position->x += speed->x * info->delta_time;
+    position->y += speed->y * info->delta_time;
 }
 
 int main(int argc, char *argv[]) {
