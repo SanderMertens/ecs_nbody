@@ -1,5 +1,5 @@
 # ecs_nbody
-This example shows how to implement n-body (using simple Newtonian gravity) with reflecs ECS. The challenging part of efficiently implementing n-body is that each entity needs to evaluate every other entity to calculate the attraction force. This example shows how this can be achieved in ECS, while still being quite efficient.
+This example shows how to implement n-body (using simple Newtonian gravity) with reflecs ECS. The challenging part of efficiently implementing n-body is that each entity needs to evaluate every other entity to calculate the attraction force. This example demonstrates a technique for achieving this, while also showing how to easily parallelize the load using the reflecs job scheduler.
 
 ## Performance
 Some rough benchmarks have been conducted with this code on a 2018 2.6Ghz i7 Macbook Pro. The benchmarks are conducted on a release build (-O3) on MacOS 10.13.6. The time is obtained using the `time` command.
