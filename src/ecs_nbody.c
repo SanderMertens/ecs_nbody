@@ -5,32 +5,26 @@
 
 #define NBODIES (26000)
 
-/* Components */
-
-typedef struct Position {
+typedef struct Vector2D {
     float x;
     float y;
-} Position;
+} Vector2D;
 
-typedef struct Speed {
-    float x;
-    float y;
-} Speed;
-
-typedef float Mass;
-
-/* World context */
-
+/* World context used to pass handle to gravity system around */
 typedef struct Context {
     EcsHandle gravity;
 } Context;
 
-/* Gravity system parameter */
+/* Components */
+typedef Vector2D Position;
+typedef Vector2D Velocity;
+typedef float Mass;
 
+/* Gravity system parameter */
 typedef struct GravityParam {
     EcsHandle me;
     Position *position;
-    Speed force_vector;
+    Velocity force_vector;
 } GravityParam;
 
 static
@@ -38,19 +32,21 @@ float rnd(int max) {
     return ((float)rand() / (float)RAND_MAX) * max;
 }
 
-void Init(void *data[], EcsInfo *info)
+/** Initialize components with random values. */
+static void Init(void *data[], EcsInfo *info)
 {
     Position *position = data[0];
-    Speed *speed = data[1];
+    Velocity *velocity = data[1];
     Mass *mass = data[2];
 
     position->x = rnd(20) - 10;
     position->y = rnd(20) - 10;
-    speed->x = rnd(1) - 0.5;
-    speed->y = rnd(1) - 0.5;
+    velocity->x = rnd(1) - 0.5;
+    velocity->y = rnd(1) - 0.5;
     *mass = rnd(10);
 }
 
+/** On-demand system that computes force vector from a single entity. */
 void Gravity(void *data[], EcsInfo *info)
 {
     GravityParam *param = info->param;
@@ -68,10 +64,11 @@ void Gravity(void *data[], EcsInfo *info)
     }
 }
 
+/** Periodic system that invokes Gravity to compute force vector per entity. */
 void Visit(void *data[], EcsInfo *info)
 {
     Context *ctx = ecs_get_context(info->world);
-    Speed *speed = data[1];
+    Velocity *velocity = data[1];
     Mass *mass = data[2];
 
     GravityParam param = {
@@ -80,50 +77,61 @@ void Visit(void *data[], EcsInfo *info)
         .force_vector = {0, 0}
     };
 
+    /* Invoke on-demand system */
     ecs_run_system(info->world, ctx->gravity, &param);
 
-    speed->x += param.force_vector.x / *mass;
-    speed->y += param.force_vector.y / *mass;
+    /* Add force to speed */
+    velocity->x += param.force_vector.x / *mass;
+    velocity->y += param.force_vector.y / *mass;
+
+    /* Don't update position yet, we may still need it for other entites */
 }
 
+/** Periodic system that progresses position using speed and time increment. */
 void Move(void *data[], EcsInfo *info)
 {
     Position *position = data[0];
-    Speed *speed = data[1];
-    position->x += speed->x * info->delta_time;
-    position->y += speed->y * info->delta_time;
+    Velocity *velocity = data[1];
+
+    /* Update proportionally to the time passed since the last iteration */
+    position->x += velocity->x * info->delta_time;
+    position->y += velocity->y * info->delta_time;
 }
 
 int main(int argc, char *argv[]) {
     EcsWorld *world = ecs_init();
     Context ctx;
 
+    /* Register components */
     ECS_COMPONENT(world, Position);
-    ECS_COMPONENT(world, Speed);
+    ECS_COMPONENT(world, Velocity);
     ECS_COMPONENT(world, Mass);
 
-    ECS_SYSTEM(world, Init, EcsOnInit, Position, Speed, Mass);
-    ECS_SYSTEM(world, Visit, EcsPeriodic, Position, Speed, Mass);
-    ECS_SYSTEM(world, Move, EcsPeriodic, Position, Speed);
-    ECS_SYSTEM(world, Gravity, EcsOnDemand, Position, Speed, Mass);
+    /* Register systems */
+    ECS_SYSTEM(world, Init, EcsOnInit, Position, Velocity, Mass);
+    ECS_SYSTEM(world, Visit, EcsPeriodic, Position, Velocity, Mass);
+    ECS_SYSTEM(world, Move, EcsPeriodic, Position, Velocity);
+    ECS_SYSTEM(world, Gravity, EcsOnDemand, Position, Velocity, Mass);
 
+    /* Set world context. This lets us use the Gravity system from Visit */
     ctx.gravity = Gravity_h;
     ecs_set_context(world, &ctx);
 
+    /* Create a bunch of entities */
     int i;
     for (i = 0; i < NBODIES; i ++) {
         EcsHandle e = ecs_new(world);
         ecs_stage(world, e, Position_h);
-        ecs_stage(world, e, Speed_h);
+        ecs_stage(world, e, Velocity_h);
         ecs_stage(world, e, Mass_h);
         ecs_commit(world, e);
     }
 
-    ecs_set_threads(world, 10);
+    /* Use multiple threads for processing the data */
+    ecs_set_threads(world, 12);
 
+    /* Do a single iteration */
     ecs_progress(world);
 
-    ecs_fini(world);
-
-    return 0;
+    return ecs_fini(world);;
 }
