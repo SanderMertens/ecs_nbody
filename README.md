@@ -7,7 +7,7 @@ Some rough benchmarks have been conducted with this code on a 2018 2.6Ghz i7 Mac
 The throughput is computed by dividing the total number of system calls by the time to completion. The number of system calls is 2N + N ^ 2, where N is the number of entities. 2N represents the Init and Visit systems. N ^ 2 represents calling the Gravity system on all entities (N) for all entities ( * N).
 
 Entities | Threads | Time to completion | FPS   | Throughput
----------|---------|--------------------|--------------
+---------|---------|--------------------|-------|-----------
 5000     | 1       | 0.263s             | 3.8   | 95.057.034
 5000     | 6       | 0.062s             | 16.1  | 403.225.806
 5000     | 12      | 0.051s             | 19.6  | 490.196.078
