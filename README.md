@@ -4,9 +4,9 @@ This example shows how to implement n-body (using simple Newtonian gravity) with
 ## Performance
 Some rough benchmarks have been conducted with this code on a 2018 2.6Ghz i7 Macbook Pro. The benchmarks are conducted on a release build (-O3) on MacOS 10.13.6. The time is obtained using the `time` command.
 
-The throughput is computed by dividing the total number of system calls by the time to completion. The number of system calls is 2N + N ^ 2, where N is the number of entities. 2N represents the Init and Visit systems. N ^ 2 represents calling the Gravity system on all entities (N) for all entities ( * N).
+The throughput is computed by dividing the number of operations by the time to completion. The number of system calls is 2N + N ^ 2, where N is the number of entities. 2N represents the Init and Visit systems. N ^ 2 represents calling the Gravity system on all entities (N) for all entities ( * N).
 
-Entities | Threads | Time to completion | FPS   | Throughput
+Entities | Threads | Time to completion | FPS   | Operations/sec
 ---------|---------|--------------------|-------|-----------
 5000     | 1       | 0.263s             | 3.8   | 95.057.034
 5000     | 6       | 0.062s             | 16.1  | 403.225.806
@@ -17,6 +17,8 @@ Entities | Threads | Time to completion | FPS   | Throughput
 27000    | 1       | 7.114s             | 0.14  | 102.473.994
 27000    | 6       | 1.27s              | 0.78  | 574.015.748
 27000    | 12      | 1.055s             | 0.95  | 690.995.260
+
+For comparison, artemis-odb (reportedly one of the fastest implementations of Artemis ECS) reports a throughput of around 51.000.000 operations per second on their GitHub page (https://github.com/junkdog/artemis-odb).
 
 ## OnDemand systems
 To address n-body we have to iterate over all entities, and then for every entity, iterate over all entities again. We thus need to obtain a list of entities to walk over that have the `Position` and `Mass` components. Ideally we reuse how reflecs matches entities agaist components, since this is much more efficient than linearly iterating over all entities.
