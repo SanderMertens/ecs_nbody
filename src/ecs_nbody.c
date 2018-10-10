@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define NBODIES (100000)
-#define NTHREADS (12)
+#define NBODIES (50000)
+#define NTHREADS (6)
 
 typedef struct Vector2D {
     float x;
@@ -34,69 +34,86 @@ float rnd(int max) {
 }
 
 /** Initialize components with random values. */
-static void Init(void *data[], EcsInfo *info)
+static void Init(EcsRows *rows)
 {
-    Position *position = data[0];
-    Velocity *velocity = data[1];
-    Mass *mass = data[2];
+    void *row;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        Position *position = ecs_column(rows, row, 0);
+        Velocity *velocity = ecs_column(rows, row, 1);
+        Mass *mass = ecs_column(rows, row, 2);
 
-    position->x = rnd(20) - 10;
-    position->y = rnd(20) - 10;
-    velocity->x = rnd(1) - 0.5;
-    velocity->y = rnd(1) - 0.5;
-    *mass = rnd(10);
+        position->x = rnd(20) - 10;
+        position->y = rnd(20) - 10;
+        velocity->x = rnd(1) - 0.5;
+        velocity->y = rnd(1) - 0.5;
+        *mass = rnd(10);
+    }
 }
 
 /** On-demand system that computes force vector from a single entity. */
-void Gravity(void *data[], EcsInfo *info)
+void GravityComputeForce(EcsRows *rows)
 {
-    GravityParam *param = info->param;
+    void *row;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        GravityParam *param = rows->param;
+        EcsHandle entity = ecs_entity(row);
 
-    if (info->entity != param->me) {
-        Position *position = data[0];
-        Mass *mass = data[1];
-        float diff_x = param->position->x - position->x;
-        float diff_y = param->position->y - position->y;
-        float distance = diff_x * diff_x + diff_y * diff_y;
-        float distance_sqr = sqrt(distance);
-        float force = *mass / distance;
-        param->force_vector.x = (diff_x / distance_sqr) * force;
-        param->force_vector.y = (diff_y / distance_sqr) * force;
+        if (entity != param->me) {
+            Position *position = ecs_column(rows, row, 0);
+            Mass *mass = ecs_column(rows, row, 1);
+
+            float diff_x = param->position->x - position->x;
+            float diff_y = param->position->y - position->y;
+            float distance = diff_x * diff_x + diff_y * diff_y;
+            float distance_sqr = sqrt(distance);
+            float force = *mass / distance;
+            param->force_vector.x = (diff_x / distance_sqr) * force;
+            param->force_vector.y = (diff_y / distance_sqr) * force;
+        }
     }
 }
 
 /** Periodic system that invokes Gravity to compute force vector per entity. */
-void Visit(void *data[], EcsInfo *info)
+void Gravity(EcsRows *rows)
 {
-    Context *ctx = ecs_get_context(info->world);
-    Velocity *velocity = data[1];
-    Mass *mass = data[2];
+    void *row;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        EcsHandle entity = ecs_entity(row);
+        Position *position = ecs_column(rows, row, 0);
+        Velocity *velocity = ecs_column(rows, row, 1);
+        Mass *mass = ecs_column(rows, row, 2);
+        Context *ctx = ecs_get_context(rows->world);
 
-    GravityParam param = {
-        .me = info->entity,
-        .position = data[0],
-        .force_vector = {0, 0}
-    };
+        GravityParam param = {
+            .me = entity,
+            .position = position,
+            .force_vector = {0, 0}
+        };
 
-    /* Invoke on-demand system */
-    ecs_run_system(info->world, ctx->gravity, &param);
+        /* Invoke on-demand system */
+        ecs_run_system(rows->world, ctx->gravity, &param);
 
-    /* Add force to speed */
-    velocity->x += param.force_vector.x / *mass;
-    velocity->y += param.force_vector.y / *mass;
+        /* Add force to speed */
+        velocity->x += param.force_vector.x / *mass;
+        velocity->y += param.force_vector.y / *mass;
 
-    /* Don't update position yet, we may still need it for other entites */
+        /* Don't update position yet, we may still need it for other entites */
+    }
 }
 
 /** Periodic system that progresses position using speed and time increment. */
-void Move(void *data[], EcsInfo *info)
+void Move(EcsRows *rows)
 {
-    Position *position = data[0];
-    Velocity *velocity = data[1];
+    void *row;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        Position *position = ecs_column(rows, row, 0);
+        Velocity *velocity = ecs_column(rows, row, 1);
+        Mass *mass = ecs_column(rows, row, 2);
 
-    /* Update proportionally to the time passed since the last iteration */
-    position->x += velocity->x * info->delta_time;
-    position->y += velocity->y * info->delta_time;
+        /* Update proportionally to the time passed since the last iteration */
+        position->x -= velocity->x / *mass;
+        position->y -= velocity->y / *mass;
+    }
 }
 
 int main(int argc, char *argv[]) {
@@ -110,22 +127,25 @@ int main(int argc, char *argv[]) {
 
     /* Register systems */
     ECS_SYSTEM(world, Init, EcsOnInit, Position, Velocity, Mass);
-    ECS_SYSTEM(world, Visit, EcsPeriodic, Position, Velocity, Mass);
-    ECS_SYSTEM(world, Move, EcsPeriodic, Position, Velocity);
-    ECS_SYSTEM(world, Gravity, EcsOnDemand, Position, Mass);
+    ECS_SYSTEM(world, Gravity, EcsPeriodic, Position, Velocity, Mass);
+    ECS_SYSTEM(world, Move, EcsPeriodic, Position, Velocity, Mass);
+    ECS_SYSTEM(world, GravityComputeForce, EcsOnDemand, Position, Mass);
 
-    /* Set world context. This lets us use the Gravity system from Visit */
-    ctx.gravity = Gravity_h;
+    /* Obtain handle to family */
+    ECS_FAMILY(world, Body, Position, Velocity, Mass);
+
+    /* Set world context */
+    ctx.gravity = GravityComputeForce_h;
     ecs_set_context(world, &ctx);
+
+    /* Preallocate memory */
+    ecs_dim(world, NBODIES);
+    ecs_dim_family(world, Body, NBODIES);
 
     /* Create a bunch of entities */
     int i;
     for (i = 0; i < NBODIES; i ++) {
-        EcsHandle e = ecs_new(world);
-        ecs_stage(world, e, Position_h);
-        ecs_stage(world, e, Velocity_h);
-        ecs_stage(world, e, Mass_h);
-        ecs_commit(world, e);
+        ecs_new(world, Body);
     }
 
     /* Use multiple threads for processing the data */
