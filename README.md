@@ -8,15 +8,12 @@ The throughput is computed by dividing the number of operations by the time to c
 
 Entities | Threads | Time to completion | FPS   | Operations/sec
 ---------|---------|--------------------|-------|-----------
-5000     | 1       | 0.263s             | 3.8   | 95.057.034
-5000     | 6       | 0.062s             | 16.1  | 403.225.806
-5000     | 12      | 0.051s             | 19.6  | 490.196.078
-10000    | 1       | 0.995s             | 1.0   | 100.502.512
-10000    | 6       | 0.195s             | 5.1   | 512.820.512
-10000    | 12      | 0.167s             | 6.0   | 598.802.395
-27000    | 1       | 7.114s             | 0.14  | 102.473.994
-27000    | 6       | 1.27s              | 0.78  | 574.015.748
-27000    | 12      | 1.055s             | 0.95  | 690.995.260
+5000     | 1       | 0.087              | 11.49 | 287.356.321
+5000     | 6       | 0.024s             | 41.57 | 1.041.666.666
+10000    | 1       | 0.315s             | 3.17  | 317.460.317
+10000    | 6       | 0.067              | 14.93 | 1.492.537.313
+27000    | 1       | 7.435s             | 0.13  | 336.247.478
+27000    | 6       | 1.32s              | 0.76  | 1.893.939.393
 
 For comparison, artemis-odb (reportedly one of the fastest implementations of Artemis ECS) reports a throughput of around 51.000.000 operations per second on their GitHub page (https://github.com/junkdog/artemis-odb).
 
@@ -31,20 +28,18 @@ With these building blocks, we define the following systems:
 
 ```c
 ECS_SYSTEM(world, Init, EcsOnInit, Position, Velocity, Mass);
-ECS_SYSTEM(world, Visit, EcsPeriodic, Position, Velocity, Mass);
-ECS_SYSTEM(world, Gravity, EcsOnDemand, Position, Mass);
+ECS_SYSTEM(world, Gravity, EcsPeriodic, Position, Velocity, Mass);
+ECS_SYSTEM(world, GravityComputeForce, EcsOnDemand, Position, Mass);
 ECS_SYSTEM(world, Move, EcsPeriodic, Position, Velocity);
 ```
-The `Init` system initializes the values for all components. The `Visit` system visits all entities ever time `ecs_progress` is called. The `Gravity` system calculates the attraction force of all entities it visits. Because it is an `OnDemand` system it needs to be manually invoked with `ecs_run_system` This is done by the `Visit` system, which achieves the N * N behavior we need. The result of the `Gravity` system is added to the `Velocity` component. Finally, the `Move` system adds the `Velocity` component to the `Position` component. In code:
+The `Init` system initializes the values for all components. The `Gravity` system visits all entities ever time `ecs_progress` is called. The `GravityComputeForce` system calculates the attraction force of all entities it visits. Because it is an `OnDemand` system it needs to be manually invoked with `ecs_run_system` This is done by the `Visit` system, which achieves the N * N behavior we need. The result of the `GravityComputeForce` system is added to the `Velocity` component. Finally, the `Move` system adds the `Velocity` component to the `Position` component. In code:
 
 ```c
-void Gravity(void *data[], EcsInfo *info) {
-    if (info->entity != param->me) {
-        /* ... Compute force ... */
-    }
+void GravityComputeForce(EcsRows *rows) {
+    /* ... Compute force ... */
 }
 
-void Visit(void *data[], EcsInfo *info) {
+void Gravity(EcsRows *rows) {
     /* ... plumbing to get context & setup parameter for Gravity ... */
 
     ecs_run_system(info->world, ctx->gravity, &param /* in: current entity, out: resulting force */);
@@ -52,7 +47,7 @@ void Visit(void *data[], EcsInfo *info) {
     /* ... Add resulting force to speed ... */
 }
 
-void Move(void *data[], EcsInfo *info) {
+void Move(EcsRows *rows) {
     /* ... Add Velocity to Position ... */
 }
 
@@ -69,8 +64,8 @@ int main(int argc, char *argv[]) {
     ecs_set_context(world, &ctx);
 
     while (true) {
-        ecs_progress(world); /* Runs Visit, followed by Move */
+        ecs_progress(world); /* Runs Gravity, followed by Move */
     }
 }
 ```
-The reason for a separate `Move` system is that we don't actually want to change the `Position` of an entity until we've finished calculating the attraction force for all entities, as this would produce inaccurate results. Reflecs processes systems sequentially, thus it is ensured that `Move` isn't ran until `Visit` has finished.
+The reason for a separate `Move` system is that we don't actually want to change the `Position` of an entity until we've finished calculating the attraction force for all entities, as this would produce inaccurate results. Reflecs processes systems sequentially, thus it is ensured that `Move` isn't ran until `Gravity` has finished.
