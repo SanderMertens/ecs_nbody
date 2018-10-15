@@ -12,8 +12,8 @@ Entities | Threads | Time to completion | FPS   | Operations/sec
 5000     | 6       | 0.024s             | 41.57 | 1.041.666.666
 10000    | 1       | 0.315s             | 3.17  | 317.460.317
 10000    | 6       | 0.067              | 14.93 | 1.492.537.313
-27000    | 1       | 7.435s             | 0.13  | 336.247.478
-27000    | 6       | 1.32s              | 0.76  | 1.893.939.393
+50000    | 1       | 7.435s             | 0.13  | 336.247.478
+50000    | 6       | 1.32s              | 0.76  | 1.893.939.393
 
 For comparison, artemis-odb (reportedly one of the fastest implementations of Artemis ECS) reports a throughput of around 51.000.000 operations per second on their GitHub page (https://github.com/junkdog/artemis-odb).
 
