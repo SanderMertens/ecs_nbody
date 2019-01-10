@@ -1,0 +1,4 @@
+
+.DS_Store
+*.o
+bin/x64-darwin-debug/ecs_nbody

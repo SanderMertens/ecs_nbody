@@ -1,8 +1,24 @@
 {
-    "id":"ecs_nbody",
-    "type":"executable",
+    "id": "ecs_nbody",
+    "type": "application",
     "value": {
-        "lib": ["m"],
-        "use": ["reflecs"]
+        "author": "Sander Mertens",
+        "description": "ECS based multithreaded n-body simulation",
+        "version": "0.0.0",
+        "repository": null,
+        "license": null,
+        "use": [
+            "reflecs",
+            "reflecs.components.transform",
+            "reflecs.components.physics",
+            "reflecs.components.geometry",
+            "reflecs.components.graphics",
+            "reflecs.systems.admin",
+            "reflecs.systems.sdl2",
+            "reflecs.systems.civetweb"
+        ]
+    },
+    "lang.c": {
+        "lib": ["m"]
     }
 }
