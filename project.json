@@ -13,8 +13,7 @@
             "reflecs.components.physics",
             "reflecs.components.geometry",
             "reflecs.components.graphics",
-            "reflecs.systems.sdl2",
-            "reflecs.systems.civetweb"
+            "reflecs.systems.sdl2"
         ]
     },
     "lang.c": {
