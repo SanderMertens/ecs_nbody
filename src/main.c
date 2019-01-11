@@ -3,40 +3,35 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define NBODIES (2000)
-#define NTHREADS (6)
-#define CENTRAL_MASS (8000.0)
-#define INITIAL_C (12000.0)
-#define BASE_MASS (0.05)
-#define VAR_MASS (0.1)
-#define STICKY (100000.0)
-#define ZOOM (0.05)
+#define NBODIES (2500)          /* Number of entities */
+#define NTHREADS (4)            /* Number of threads used to simulate bodies */
+#define CENTRAL_MASS (12000.0)  /* Central mass */
+#define INITIAL_C (12000.0)     /* Mass used in calculation of orbital speed */
+#define BASE_MASS (0.1)         /* Base mass */
+#define VAR_MASS (0.8)          /* Amount of randomness added to mass */
+#define STICKY (10000.0)        /* Reduce acceleration in close encounters */
+#define ZOOM (0.1)              /* Zoom (used for viewport) */
+#define MAX_RADIUS (50)         /* Circle radius. Will be multiplied by ZOOM */
+#define SPEED (2)               /* Speed of simulation */
 
 /* Components */
 typedef double Mass;
 
-/* Gravity system parameter */
-typedef struct GravityParam {
-    EcsHandle me;
-    EcsPosition2D *position;
-    EcsVelocity2D force_vector;
-} GravityParam;
-
 /* Compute color from speed */
 static
 EcsColor color_from_speed(float f) {
-    f = f / 13;
+    f = f / 8 * sqrt(SPEED);
     if (f > 1.0) f = 1.0;
 
     float f_red = f - 0.2;
     if (f_red < 0) f_red = 0;
     f_red /= 0.8;
 
-    float f_green = f - 0.1;
+    float f_green = f - 0.7;
     if (f_green < 0) f_green = 0;
-    f_green /= 0.9;
+    f_green /= 0.3;
 
-    return (EcsColor){f_red * 255, f_green * 50, f * 150 + 100, 255};
+    return (EcsColor){f_red * 255, f_green * 255, f * 155 + 100, 255};
 }
 
 /** Initialize entities with random values. */
@@ -50,7 +45,7 @@ static void Init(EcsRows *rows)
         EcsCircle *circle = ecs_column(rows, row, 3);
 
         position->x = rand() % 8000 - 4000;
-        position->y = rand() % 2000 - 1000;
+        position->y = rand() % 200 - 100;
         *mass = BASE_MASS + ((float)rand() / (float)RAND_MAX) * VAR_MASS;
 
         /* Set speed so it stays in constant orbit (at least initially) */
@@ -59,22 +54,29 @@ static void Init(EcsRows *rows)
             EcsVec2 vec_norm, vec_rot;
             ecs_vec2_div(position, radius, &vec_norm);
             ecs_vec2_perpendicular(&vec_norm, &vec_rot);
-            double v = sqrt(INITIAL_C / radius / *mass);
+            double v = sqrt(INITIAL_C / radius / *mass / SPEED);
 
             velocity->x = vec_rot.x * v;
             velocity->y = vec_rot.y * v;
         }
 
-        circle->radius = 4 * (*mass / (float)(BASE_MASS + VAR_MASS)) + 1;
+        circle->radius = MAX_RADIUS * (*mass / (float)(BASE_MASS + VAR_MASS)) + 1;
     }
 }
+
+/* Parameter for GravityComputeForce system */
+typedef struct GravityParam {
+    EcsHandle me;
+    EcsPosition2D *position;
+    EcsVelocity2D force_vector;
+} GravityParam;
 
 /** On-demand system that computes attraction force from a single entity. */
 void GravityComputeForce(EcsRows *rows)
 {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        GravityParam *param = rows->param;
+        GravityParam *param = rows->param; /* Parameter passed from Gravity */
         EcsHandle entity = ecs_entity(row);
 
         if (entity != param->me) {
@@ -116,6 +118,7 @@ void Gravity(EcsRows *rows)
             .position = position,
             .force_vector = {0, 0}
         };
+
         ecs_run_system(rows->world, GravityComputeForce_h, 0, 0, &param);
 
         /* Add force to speed */
@@ -124,18 +127,25 @@ void Gravity(EcsRows *rows)
     }
 }
 
-/** Periodic system that sets position and color using computed speed */
+/** Periodic system that moves entities */
 void Move(EcsRows *rows)
 {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
         EcsPosition2D *position = ecs_column(rows, row, 0);
         EcsVelocity2D *velocity = ecs_column(rows, row, 1);
-        EcsColor *color = ecs_column(rows, row, 2);
+        position->x -= SPEED * velocity->x;
+        position->y -= SPEED * velocity->y;
+    }
+}
 
-        position->x -= velocity->x;
-        position->y -= velocity->y;
-
+/** Periodic system that sets color based on speed */
+void SetColor(EcsRows *rows)
+{
+    void *row;
+    for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
+        EcsVelocity2D *velocity = ecs_column(rows, row, 0);
+        EcsColor *color = ecs_column(rows, row, 1);
         *color = color_from_speed (ecs_vec2_magnitude(velocity));
     }
 }
@@ -148,8 +158,6 @@ int main(int argc, char *argv[]) {
     ECS_IMPORT(world, EcsComponentsPhysics, ECS_2D);
     ECS_IMPORT(world, EcsComponentsGeometry, ECS_2D);
     ECS_IMPORT(world, EcsComponentsGraphics, ECS_2D);
-    ECS_IMPORT(world, EcsSystemsCivetweb, 0);
-    ECS_IMPORT(world, EcsSystemsAdmin, 0);
     ECS_IMPORT(world, EcsSystemsSdl2, ECS_2D);
 
     /* Register Mass component (other components come from imported modules) */
@@ -162,14 +170,11 @@ int main(int argc, char *argv[]) {
     ECS_SYSTEM(world, Init, EcsOnAdd, EcsPosition2D, EcsVelocity2D, Mass, EcsCircle, EcsColor);
     ECS_SYSTEM(world, GravityComputeForce, EcsOnDemand, EcsPosition2D, Mass);
     ECS_SYSTEM(world, Gravity, EcsOnFrame, EcsPosition2D, EcsVelocity2D, Mass, HANDLE.GravityComputeForce);
-    ECS_SYSTEM(world, Move, EcsPostFrame, EcsPosition2D, EcsVelocity2D, EcsColor);
-
-    /* Create new entity for the web admin */
-    ecs_set(world, 0, EcsAdmin, {.port = 9090});
+    ECS_SYSTEM(world, Move, EcsOnFrame, EcsPosition2D, EcsVelocity2D);
+    ECS_SYSTEM(world, SetColor, EcsOnFrame, EcsVelocity2D, EcsColor);
 
     /* Create the drawing canvas (SDL listens for this to create the window) */
-    EcsHandle canvas = ecs_new(world, EcsContainer_h);
-    ecs_set(world, canvas, EcsCanvas2D, {
+    EcsHandle canvas = ecs_set(world, 0, EcsCanvas2D, {
         .window.width = 1024, .window.height = 768,
         .viewport.width = 1024 / ZOOM, .viewport.height = 768 / ZOOM
     });
@@ -186,7 +191,7 @@ int main(int argc, char *argv[]) {
         /* First entity is the central mass */
         if (!i) {
             ecs_set(world, body, EcsPosition2D, {0, 0});
-            ecs_set(world, body, Mass, CENTRAL_MASS);
+            ecs_set(world, body, Mass, {CENTRAL_MASS});
             ecs_set(world, body, EcsVelocity2D, {0, 0});
         }
     }

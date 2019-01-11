@@ -23,7 +23,6 @@
 #include <reflecs.components.physics>
 #include <reflecs.components.geometry>
 #include <reflecs.components.graphics>
-#include <reflecs.systems.admin>
 #include <reflecs.systems.sdl2>
 #include <reflecs.systems.civetweb>
 

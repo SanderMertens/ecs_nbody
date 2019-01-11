@@ -13,7 +13,6 @@
             "reflecs.components.physics",
             "reflecs.components.geometry",
             "reflecs.components.graphics",
-            "reflecs.systems.admin",
             "reflecs.systems.sdl2",
             "reflecs.systems.civetweb"
         ]
