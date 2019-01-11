@@ -24,7 +24,6 @@
 #include <reflecs.components.geometry>
 #include <reflecs.components.graphics>
 #include <reflecs.systems.sdl2>
-#include <reflecs.systems.civetweb>
 
 /* Headers of private dependencies */
 #ifdef ECS_NBODY_IMPL

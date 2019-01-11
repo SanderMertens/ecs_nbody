@@ -4,15 +4,15 @@
 #include <stdlib.h>
 
 #define NBODIES (2500)          /* Number of entities */
-#define NTHREADS (4)            /* Number of threads used to simulate bodies */
+#define NTHREADS (6)            /* Number of threads used to simulate bodies */
 #define CENTRAL_MASS (12000.0)  /* Central mass */
 #define INITIAL_C (12000.0)     /* Mass used in calculation of orbital speed */
 #define BASE_MASS (0.1)         /* Base mass */
 #define VAR_MASS (0.8)          /* Amount of randomness added to mass */
 #define STICKY (10000.0)        /* Reduce acceleration in close encounters */
 #define ZOOM (0.1)              /* Zoom (used for viewport) */
-#define MAX_RADIUS (50)         /* Circle radius. Will be multiplied by ZOOM */
-#define SPEED (2)               /* Speed of simulation */
+#define MAX_RADIUS (70)         /* Circle radius. Will be multiplied by ZOOM */
+#define SPEED (4)               /* Speed of simulation */
 
 /* Components */
 typedef double Mass;
@@ -151,14 +151,20 @@ void SetColor(EcsRows *rows)
 }
 
 int main(int argc, char *argv[]) {
+    /* Initialize the world object */
     EcsWorld *world = ecs_init();
 
-    /* Import reflecs modules */
+
+    /* -- Import modules -- */
+
     ECS_IMPORT(world, EcsComponentsTransform, ECS_2D);
     ECS_IMPORT(world, EcsComponentsPhysics, ECS_2D);
     ECS_IMPORT(world, EcsComponentsGeometry, ECS_2D);
     ECS_IMPORT(world, EcsComponentsGraphics, ECS_2D);
     ECS_IMPORT(world, EcsSystemsSdl2, ECS_2D);
+
+
+    /* -- Components -- */
 
     /* Register Mass component (other components come from imported modules) */
     ECS_COMPONENT(world, Mass);
@@ -166,12 +172,26 @@ int main(int argc, char *argv[]) {
     /* Define components of the Body family */
     ECS_FAMILY(world, Body, EcsPosition2D, EcsVelocity2D, Mass, EcsCircle, EcsColor);
 
-    /* Register systems */
+
+    /* -- Systems -- */
+
+    /* System that initializes components associated by a body */
     ECS_SYSTEM(world, Init, EcsOnAdd, EcsPosition2D, EcsVelocity2D, Mass, EcsCircle, EcsColor);
+
+    /* System that computes the force for a single entity */
     ECS_SYSTEM(world, GravityComputeForce, EcsOnDemand, EcsPosition2D, Mass);
+
+    /* System that iterates over all entities, and adds force to the velocity */
     ECS_SYSTEM(world, Gravity, EcsOnFrame, EcsPosition2D, EcsVelocity2D, Mass, HANDLE.GravityComputeForce);
+
+    /* System that updates the position of the entities */
     ECS_SYSTEM(world, Move, EcsOnFrame, EcsPosition2D, EcsVelocity2D);
+
+    /* System that computes the color of an entity based on the velocity */
     ECS_SYSTEM(world, SetColor, EcsOnFrame, EcsVelocity2D, EcsColor);
+
+
+    /* -- Entity creation -- */
 
     /* Create the drawing canvas (SDL listens for this to create the window) */
     EcsHandle canvas = ecs_set(world, 0, EcsCanvas2D, {
@@ -196,11 +216,17 @@ int main(int argc, char *argv[]) {
         }
     }
 
+
+    /* -- Configuration -- */
+
     /* Don't run simulation faster than 60FPS */
     ecs_set_target_fps(world, 60);
 
     /* Use multiple threads to calculate the movement of the entities */
     ecs_set_threads(world, NTHREADS);
+
+
+    /* -- Main loop -- */
 
     /* Run until ecs_quit is called by SDL (when window is closed) */
     while ( ecs_progress(world, 0));
