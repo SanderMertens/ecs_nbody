@@ -1,5 +1,5 @@
 # ecs_nbody
-This is an example that shows how a brute force version of the nbody problem can be implemented in Reflecs ECS. The example demonstrates various reflecs features, like importing modules, on demand systems, multithreading and different ways to initialize components.
+This is an example that shows how a brute force version of the nbody problem can be implemented in Reflecs ECS (https://github.com/SanderMertens/reflecs). The example demonstrates various reflecs features, like importing modules, on demand systems, multithreading and different ways to initialize components.
 
 ## Getting Started
 Reflecs uses the bake build system (https://github.com/SanderMertens/bake). To install bake on Linux and MacOS, do:
