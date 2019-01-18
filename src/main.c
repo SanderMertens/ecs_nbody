@@ -39,10 +39,10 @@ static void Init(EcsRows *rows)
 {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsPosition2D *position = ecs_column(rows, row, 0);
-        EcsVelocity2D *velocity = ecs_column(rows, row, 1);
-        Mass *mass = ecs_column(rows, row, 2);
-        EcsCircle *circle = ecs_column(rows, row, 3);
+        EcsPosition2D *position = ecs_data(rows, row, 0);
+        EcsVelocity2D *velocity = ecs_data(rows, row, 1);
+        Mass *mass = ecs_data(rows, row, 2);
+        EcsCircle *circle = ecs_data(rows, row, 3);
 
         position->x = rand() % 8000 - 4000;
         position->y = rand() % 200 - 100;
@@ -66,7 +66,7 @@ static void Init(EcsRows *rows)
 
 /* Parameter for GravityComputeForce system */
 typedef struct GravityParam {
-    EcsHandle me;
+    EcsEntity me;
     EcsPosition2D *position;
     EcsVelocity2D force_vector;
 } GravityParam;
@@ -77,11 +77,11 @@ void GravityComputeForce(EcsRows *rows)
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
         GravityParam *param = rows->param; /* Parameter passed from Gravity */
-        EcsHandle entity = ecs_entity(row);
+        EcsEntity entity = ecs_entity(rows, row, ECS_ROW_ENTITY);
 
         if (entity != param->me) {
-            EcsPosition2D *position = ecs_column(rows, row, 0);
-            Mass *mass = ecs_column(rows, row, 1);
+            EcsPosition2D *position = ecs_data(rows, row, 0);
+            Mass *mass = ecs_data(rows, row, 1);
 
             EcsVec2 diff;
             ecs_vec2_sub(param->position, position, &diff);
@@ -103,14 +103,14 @@ void GravityComputeForce(EcsRows *rows)
 void Gravity(EcsRows *rows)
 {
     /* Get handle to GravityComputeForce system */
-    EcsHandle GravityComputeForce_h = ecs_handle(rows, 3);
+    EcsEntity GravityComputeForce_h = ecs_component(rows, 3);
 
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsHandle entity = ecs_entity(row);
-        EcsPosition2D *position = ecs_column(rows, row, 0);
-        EcsVelocity2D *velocity = ecs_column(rows, row, 1);
-        Mass *mass = ecs_column(rows, row, 2);
+        EcsEntity entity = ecs_entity(rows, row, ECS_ROW_ENTITY);
+        EcsPosition2D *position = ecs_data(rows, row, 0);
+        EcsVelocity2D *velocity = ecs_data(rows, row, 1);
+        Mass *mass = ecs_data(rows, row, 2);
 
         /* Compute force vector from all other entities */
         GravityParam param = {
@@ -119,7 +119,7 @@ void Gravity(EcsRows *rows)
             .force_vector = {0, 0}
         };
 
-        ecs_run_system(rows->world, GravityComputeForce_h, 0, 0, &param);
+        ecs_run(rows->world, GravityComputeForce_h, 0, 0, &param);
 
         /* Add force to speed */
         velocity->x += param.force_vector.x / *mass;
@@ -132,8 +132,8 @@ void Move(EcsRows *rows)
 {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsPosition2D *position = ecs_column(rows, row, 0);
-        EcsVelocity2D *velocity = ecs_column(rows, row, 1);
+        EcsPosition2D *position = ecs_data(rows, row, 0);
+        EcsVelocity2D *velocity = ecs_data(rows, row, 1);
         position->x -= SPEED * velocity->x;
         position->y -= SPEED * velocity->y;
     }
@@ -144,8 +144,8 @@ void SetColor(EcsRows *rows)
 {
     void *row;
     for (row = rows->first; row < rows->last; row = ecs_next(rows, row)) {
-        EcsVelocity2D *velocity = ecs_column(rows, row, 0);
-        EcsColor *color = ecs_column(rows, row, 1);
+        EcsVelocity2D *velocity = ecs_data(rows, row, 0);
+        EcsColor *color = ecs_data(rows, row, 1);
         *color = color_from_speed (ecs_vec2_magnitude(velocity));
     }
 }
@@ -194,7 +194,7 @@ int main(int argc, char *argv[]) {
     /* -- Entity creation -- */
 
     /* Create the drawing canvas (SDL listens for this to create the window) */
-    EcsHandle canvas = ecs_set(world, 0, EcsCanvas2D, {
+    EcsEntity canvas = ecs_set(world, 0, EcsCanvas2D, {
         .window.width = 1024, .window.height = 768,
         .viewport.width = 1024 / ZOOM, .viewport.height = 768 / ZOOM
     });
@@ -202,11 +202,10 @@ int main(int argc, char *argv[]) {
     /* Create the entities for the canvas */
     int i;
     for (i = 0; i < NBODIES; i ++) {
-        EcsHandle body = ecs_new(world, canvas);
+        EcsEntity body = ecs_new(world, canvas);
 
         /* Add Body family, with Position, Velocity, Mass, Circle and Color */
         ecs_add(world, body, Body_h);
-        ecs_commit(world, body);
 
         /* First entity is the central mass */
         if (!i) {

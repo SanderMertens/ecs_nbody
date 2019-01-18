@@ -9,6 +9,7 @@
         "license": null,
         "use": [
             "reflecs",
+            "reflecs.math",
             "reflecs.components.transform",
             "reflecs.components.physics",
             "reflecs.components.geometry",
