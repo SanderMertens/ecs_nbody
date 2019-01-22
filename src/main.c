@@ -54,6 +54,7 @@ static void Init(EcsRows *rows)
             EcsVec2 vec_norm, vec_rot;
             ecs_vec2_div(position, radius, &vec_norm);
             ecs_vec2_perpendicular(&vec_norm, &vec_rot);
+
             double v = sqrt(INITIAL_C / radius / *mass / SPEED);
 
             velocity->x = vec_rot.x * v;
@@ -93,6 +94,8 @@ void GravityComputeForce(EcsRows *rows)
 
             double distance_sqr = sqrt(distance);
             double force = *mass / distance;
+
+            /* Multiply direction vector by force, divide by distance (to normalize) */
             ecs_vec2_mult(&diff, force / distance_sqr, &diff);
             ecs_vec2_add(&param->force_vector, &diff, &param->force_vector);
         }
@@ -119,7 +122,7 @@ void Gravity(EcsRows *rows)
             .force_vector = {0, 0}
         };
 
-        ecs_run(rows->world, GravityComputeForce_h, 0, 0, &param);
+        ecs_run(rows->world, GravityComputeForce_h, 0, &param);
 
         /* Add force to speed */
         velocity->x += param.force_vector.x / *mass;
