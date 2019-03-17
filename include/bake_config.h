@@ -18,13 +18,13 @@
 #define ECS_NBODY_BAKE_CONFIG_H
 
 /* Headers of public dependencies */
-#include <reflecs>
-#include <reflecs.math>
-#include <reflecs.components.transform>
-#include <reflecs.components.physics>
-#include <reflecs.components.geometry>
-#include <reflecs.components.graphics>
-#include <reflecs.systems.sdl2>
+#include <flecs>
+#include <flecs.math>
+#include <flecs.components.transform>
+#include <flecs.components.physics>
+#include <flecs.components.geometry>
+#include <flecs.components.graphics>
+#include <flecs.systems.sdl2>
 
 /* Headers of private dependencies */
 #ifdef ECS_NBODY_IMPL

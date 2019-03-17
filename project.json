@@ -4,17 +4,14 @@
     "value": {
         "author": "Sander Mertens",
         "description": "ECS based multithreaded n-body simulation",
-        "version": "0.0.0",
-        "repository": null,
-        "license": null,
         "use": [
-            "reflecs",
-            "reflecs.math",
-            "reflecs.components.transform",
-            "reflecs.components.physics",
-            "reflecs.components.geometry",
-            "reflecs.components.graphics",
-            "reflecs.systems.sdl2"
+            "flecs",
+            "flecs.math",
+            "flecs.components.transform",
+            "flecs.components.physics",
+            "flecs.components.geometry",
+            "flecs.components.graphics",
+            "flecs.systems.sdl2"
         ]
     },
     "lang.c": {
