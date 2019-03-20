@@ -3,8 +3,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define NBODIES (2500)          /* Number of entities */
-#define NTHREADS (6)            /* Number of threads used to simulate bodies */
+#define NBODIES (3000)          /* Number of entities */
+#define NTHREADS (12)            /* Number of threads used to simulate bodies */
 #define CENTRAL_MASS (12000.0)  /* Central mass */
 #define INITIAL_C (12000.0)     /* Mass used in calculation of orbital speed */
 #define BASE_MASS (0.1)         /* Base mass */
@@ -42,7 +42,7 @@ static void Init(EcsRows *rows)
     Mass *mass = ecs_column(rows, Mass, 3);
     EcsCircle *circle = ecs_column(rows, EcsCircle, 4);
 
-    for (int i = rows->begin; i < rows->end; i ++) {
+    for (int i = 0; i < rows->count; i ++) {
         position[i].x = rand() % 8000 - 4000;
         position[i].y = rand() % 200 - 100;
         mass[i] = BASE_MASS + ((float)rand() / (float)RAND_MAX) * VAR_MASS;
@@ -80,7 +80,7 @@ void GravityComputeForce(EcsRows *rows)
     EcsPosition2D *position = ecs_column(rows, EcsPosition2D, 1);
     Mass *mass = ecs_column(rows, Mass, 2);
     
-    for (int i = rows->begin; i < rows->end; i ++) {
+    for (int i = 0; i < rows->count; i ++) {
         EcsEntity current = rows->entities[i];
 
         if (current != me) {
@@ -111,7 +111,7 @@ void Gravity(EcsRows *rows)
     Mass *mass = ecs_column(rows, Mass, 3);
     EcsEntity EGravityComputeForce = ecs_column_component(rows, 4);
 
-    for (int i = rows->begin; i < rows->end; i ++) {
+    for (int i = 0; i < rows->count; i ++) {
         /* Compute force vector from all other entities */
         GravityParam param = {
             .me = rows->entities[i],
@@ -133,7 +133,7 @@ void Move(EcsRows *rows)
     EcsPosition2D *position = ecs_column(rows, EcsPosition2D, 1);
     EcsVelocity2D *velocity = ecs_column(rows, EcsVelocity2D, 2);
 
-    for (int i = rows->begin; i < rows->end; i ++) {
+    for (int i = 0; i < rows->count; i ++) {
         position[i].x -= SPEED * velocity[i].x;
         position[i].y -= SPEED * velocity[i].y;
     }
@@ -145,7 +145,7 @@ void SetColor(EcsRows *rows)
     EcsVelocity2D *velocity = ecs_column(rows, EcsVelocity2D, 1);
     EcsColor *color = ecs_column(rows, EcsColor, 2);
     
-    for (int i = rows->begin; i < rows->end; i ++) {
+    for (int i = 0; i < rows->count; i ++) {
         color[i] = color_from_speed (ecs_vec2_magnitude(&velocity[i]));
     }
 }
@@ -210,15 +210,10 @@ int main(int argc, char *argv[]) {
 
     /* Don't run simulation faster than 60FPS */
     ecs_set_target_fps(world, 60);
-
-    /* Use multiple threads to calculate the movement of the entities */
     ecs_set_threads(world, NTHREADS);
 
-
-    /* -- Main loop -- */
-
     /* Run until ecs_quit is called by SDL (when window is closed) */
-    while ( ecs_progress(world, 0));
+    while ( ecs_progress(world, 0)) {  };
 
     /* Cleanup */
     return ecs_fini(world);
