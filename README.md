@@ -1,8 +1,8 @@
 # ecs_nbody
-This is an example that shows how a brute force version of the nbody problem can be implemented in Reflecs ECS (https://github.com/SanderMertens/reflecs). The example demonstrates various reflecs features, like importing modules, on demand systems, multithreading and different ways to initialize components.
+This is an example that shows how a brute force version of the nbody problem can be implemented in flecs ECS (https://github.com/SanderMertens/flecs). The example demonstrates various flecs features, like importing modules, on demand systems, multithreading and different ways to initialize components.
 
 ## Getting Started
-Reflecs uses the bake build system (https://github.com/SanderMertens/bake). To install bake on Linux and MacOS, do:
+Flecs uses the bake build system (https://github.com/SanderMertens/bake). To install bake on Linux and MacOS, do:
 
 ```
 git clone https://github.com/SanderMertens/bake
@@ -45,7 +45,7 @@ Once the canvas and entities are initialized, the application will set the targe
 
 The `ecs_progress` function runs the main loop of the application. In here, all `EcsOnFrame` systems are executed, the most notable one being the `Gravity` system. This system iterates over all the objects, computes the force for the object, and updates the velocity with the force. To compute the force, the `Gravity` system needs to iterate over all objects again.
 
-In Reflecs this can be efficiently achieved with an OnDemand system. On demand systems need to be invoked manually by the application, as opposed to being invoked automatically by `ecs_progress`. The advantage of on demand systems is that they are prematched with the entity tables, which makes invoking them a relatively cheap operation. As an additional bonus, on demand systems allow for the passing of parameters. In the project, the `Gravity` system invokes the on demand system `GravityComputeForce`, which stores the resulting force in the `force_vector` member of the passed in parameter.
+In flecs this can be efficiently achieved with an OnDemand system. On demand systems need to be invoked manually by the application, as opposed to being invoked automatically by `ecs_progress`. The advantage of on demand systems is that they are prematched with the entity tables, which makes invoking them a relatively cheap operation. As an additional bonus, on demand systems allow for the passing of parameters. In the project, the `Gravity` system invokes the on demand system `GravityComputeForce`, which stores the resulting force in the `force_vector` member of the passed in parameter.
 
 The difference between automatic invokcation and manual invocation can be found in the system declaration, where one specifiecs `EcsOnFrame` whereas the other specifies `EcsOnDemand`.
 
