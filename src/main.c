@@ -66,7 +66,7 @@ static void Init(ecs_rows_t *rows)
 
 /* Parameter for GravityComputeForce system */
 typedef struct GravityParam {
-    EcsEntity me;
+    ecs_entity_t me;
     EcsPosition2D *position;
     EcsVelocity2D force_vector;
 } GravityParam;
@@ -75,13 +75,13 @@ typedef struct GravityParam {
 void GravityComputeForce(ecs_rows_t *rows)
 {
     GravityParam *param = rows->param; /* Parameter passed from Gravity */
-    EcsEntity me = param->me;
+    ecs_entity_t me = param->me;
 
     EcsPosition2D *position = ecs_column(rows, EcsPosition2D, 1);
     Mass *mass = ecs_column(rows, Mass, 2);
     
     for (int i = 0; i < rows->count; i ++) {
-        EcsEntity current = rows->entities[i];
+        ecs_entity_t current = rows->entities[i];
 
         if (current != me) {
             EcsVec2 diff;
@@ -109,7 +109,7 @@ void Gravity(ecs_rows_t *rows)
     EcsPosition2D *position = ecs_column(rows, EcsPosition2D, 1);
     EcsVelocity2D *velocity = ecs_column(rows, EcsVelocity2D, 2);
     Mass *mass = ecs_column(rows, Mass, 3);
-    EcsEntity EGravityComputeForce = ecs_column_component(rows, 4);
+    ecs_entity_t EGravityComputeForce = ecs_column_component(rows, 4);
 
     for (int i = 0; i < rows->count; i ++) {
         /* Compute force vector from all other entities */
@@ -200,7 +200,7 @@ int main(int argc, char *argv[]) {
     });
 
     /* Create NBODIES entities, return the first one, make that central mass */
-    EcsEntity central_mass = ecs_new_w_count(world, Body, NBODIES, NULL);
+    ecs_entity_t central_mass = ecs_new_w_count(world, Body, NBODIES, NULL);
     ecs_set(world, central_mass, EcsPosition2D, {0, 0});
     ecs_set(world, central_mass, Mass, {CENTRAL_MASS});
     ecs_set(world, central_mass, EcsVelocity2D, {0, 0});
