@@ -35,7 +35,7 @@ EcsColor color_from_speed(float f) {
 }
 
 /** Initialize entities with random values. */
-static void Init(EcsRows *rows)
+static void Init(ecs_rows_t *rows)
 {
     EcsPosition2D *position = ecs_column(rows, EcsPosition2D, 1);
     EcsVelocity2D *velocity = ecs_column(rows, EcsVelocity2D, 2);
@@ -72,7 +72,7 @@ typedef struct GravityParam {
 } GravityParam;
 
 /** On-demand system that computes attraction force from a single entity. */
-void GravityComputeForce(EcsRows *rows)
+void GravityComputeForce(ecs_rows_t *rows)
 {
     GravityParam *param = rows->param; /* Parameter passed from Gravity */
     EcsEntity me = param->me;
@@ -103,7 +103,7 @@ void GravityComputeForce(EcsRows *rows)
 }
 
 /** Periodic system that computes gravitational force acting on entity */
-void Gravity(EcsRows *rows)
+void Gravity(ecs_rows_t *rows)
 {
     /* Get handle to GravityComputeForce system */
     EcsPosition2D *position = ecs_column(rows, EcsPosition2D, 1);
@@ -128,7 +128,7 @@ void Gravity(EcsRows *rows)
 }
 
 /** Periodic system that moves entities */
-void Move(EcsRows *rows)
+void Move(ecs_rows_t *rows)
 {
     EcsPosition2D *position = ecs_column(rows, EcsPosition2D, 1);
     EcsVelocity2D *velocity = ecs_column(rows, EcsVelocity2D, 2);
@@ -140,7 +140,7 @@ void Move(EcsRows *rows)
 }
 
 /** Periodic system that sets color based on speed */
-void SetColor(EcsRows *rows)
+void SetColor(ecs_rows_t *rows)
 {
     EcsVelocity2D *velocity = ecs_column(rows, EcsVelocity2D, 1);
     EcsColor *color = ecs_column(rows, EcsColor, 2);
@@ -152,7 +152,7 @@ void SetColor(EcsRows *rows)
 
 int main(int argc, char *argv[]) {
     /* Initialize the world object */
-    EcsWorld *world = ecs_init();
+    ecs_world_t *world = ecs_init_w_args(argc, argv);
 
 
     /* -- Import modules -- */
