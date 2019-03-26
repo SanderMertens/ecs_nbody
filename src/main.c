@@ -109,7 +109,7 @@ void Gravity(ecs_rows_t *rows)
     EcsPosition2D *position = ecs_column(rows, EcsPosition2D, 1);
     EcsVelocity2D *velocity = ecs_column(rows, EcsVelocity2D, 2);
     Mass *mass = ecs_column(rows, Mass, 3);
-    ecs_entity_t EGravityComputeForce = ecs_column_component(rows, 4);
+    ecs_entity_t EGravityComputeForce = ecs_column_entity(rows, 4);
 
     for (int i = 0; i < rows->count; i ++) {
         /* Compute force vector from all other entities */
