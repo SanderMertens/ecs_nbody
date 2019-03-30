@@ -182,13 +182,13 @@ int main(int argc, char *argv[]) {
     ECS_SYSTEM(world, GravityComputeForce, EcsManual, EcsPosition2D, Mass);
 
     /* System that iterates over all entities, and adds force to the velocity */
-    ECS_SYSTEM(world, Gravity, EcsOnFrame, EcsPosition2D, EcsVelocity2D, Mass, ID.GravityComputeForce);
+    ECS_SYSTEM(world, Gravity, EcsOnUpdate, EcsPosition2D, EcsVelocity2D, Mass, ID.GravityComputeForce);
 
     /* System that updates the position of the entities */
-    ECS_SYSTEM(world, Move, EcsOnFrame, EcsPosition2D, EcsVelocity2D);
+    ECS_SYSTEM(world, Move, EcsOnUpdate, EcsPosition2D, EcsVelocity2D);
 
     /* System that computes the color of an entity based on the velocity */
-    ECS_SYSTEM(world, SetColor, EcsOnFrame, EcsVelocity2D, EcsColor);
+    ECS_SYSTEM(world, SetColor, EcsOnUpdate, EcsVelocity2D, EcsColor);
 
 
     /* -- Entity creation -- */

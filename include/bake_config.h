@@ -17,6 +17,10 @@
 #ifndef ECS_NBODY_BAKE_CONFIG_H
 #define ECS_NBODY_BAKE_CONFIG_H
 
+/* Generated includes are specific to the bake environment. If a project is not
+ * built with bake, it will have to provide alternative methods for including
+ * its dependencies. */
+#ifdef __BAKE__
 /* Headers of public dependencies */
 #include <flecs>
 #include <flecs.math>
@@ -30,16 +34,21 @@
 #ifdef ECS_NBODY_IMPL
 /* No dependencies */
 #endif
+#endif
 
 /* Convenience macro for exporting symbols */
-#if ECS_NBODY_IMPL && defined _MSC_VER
-#define ECS_NBODY_EXPORT __declspec(dllexport)
-#elif ECS_NBODY_IMPL
-#define ECS_NBODY_EXPORT __attribute__((__visibility__("default")))
-#elif defined _MSC_VER
-#define ECS_NBODY_EXPORT __declspec(dllimport)
+#ifndef ECS_NBODY_STATIC
+  #if ECS_NBODY_IMPL && defined _MSC_VER
+    #define ECS_NBODY_EXPORT __declspec(dllexport)
+  #elif ECS_NBODY_IMPL
+    #define ECS_NBODY_EXPORT __attribute__((__visibility__("default")))
+  #elif defined _MSC_VER
+    #define ECS_NBODY_EXPORT __declspec(dllimport)
+  #else
+    #define ECS_NBODY_EXPORT
+  #endif
 #else
-#define ECS_NBODY_EXPORT
+  #define ECS_NBODY_EXPORT
 #endif
 
 #endif
