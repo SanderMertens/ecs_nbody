@@ -200,7 +200,7 @@ int main(int argc, char *argv[]) {
     });
 
     /* Create NBODIES entities, return the first one, make that central mass */
-    ecs_entity_t central_mass = ecs_new_w_count(world, Body, NBODIES, NULL);
+    ecs_entity_t central_mass = ecs_new_w_count(world, Body, NBODIES);
     ecs_set(world, central_mass, EcsPosition2D, {0, 0});
     ecs_set(world, central_mass, Mass, {CENTRAL_MASS});
     ecs_set(world, central_mass, EcsVelocity2D, {0, 0});
