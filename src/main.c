@@ -157,11 +157,11 @@ int main(int argc, char *argv[]) {
 
     /* -- Import modules -- */
 
-    ECS_IMPORT(world, EcsComponentsTransform, ECS_2D);
-    ECS_IMPORT(world, EcsComponentsPhysics, ECS_2D);
-    ECS_IMPORT(world, EcsComponentsGeometry, ECS_2D);
-    ECS_IMPORT(world, EcsComponentsGraphics, ECS_2D);
-    ECS_IMPORT(world, EcsSystemsSdl2, ECS_2D);
+    ECS_IMPORT(world, FlecsComponentsTransform, ECS_2D);
+    ECS_IMPORT(world, FlecsComponentsPhysics, ECS_2D);
+    ECS_IMPORT(world, FlecsComponentsGeometry, ECS_2D);
+    ECS_IMPORT(world, FlecsComponentsGraphics, ECS_2D);
+    ECS_IMPORT(world, FlecsSystemsSdl2, ECS_2D);
 
 
     /* -- Components -- */
