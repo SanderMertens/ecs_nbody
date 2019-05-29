@@ -2,7 +2,7 @@
 #define ECS_NBODY_H
 
 /* This generated file contains includes for project dependencies */
-#include "bake_config.h"
+#include <ecs_nbody/bake_config.h>
 
 #ifdef __cplusplus
 extern "C" {

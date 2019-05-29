@@ -1,4 +1,4 @@
-#include <include/ecs_nbody.h>
+#include <ecs_nbody.h>
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>

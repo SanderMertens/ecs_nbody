@@ -20,25 +20,23 @@
 /* Generated includes are specific to the bake environment. If a project is not
  * built with bake, it will have to provide alternative methods for including
  * its dependencies. */
-#ifdef __BAKE__
 /* Headers of public dependencies */
-#include <flecs>
-#include <flecs.math>
-#include <flecs.components.transform>
-#include <flecs.components.physics>
-#include <flecs.components.geometry>
-#include <flecs.components.graphics>
-#include <flecs.systems.sdl2>
+#include <flecs.h>
+#include <flecs_math.h>
+#include <flecs_components_transform.h>
+#include <flecs_components_physics.h>
+#include <flecs_components_geometry.h>
+#include <flecs_components_graphics.h>
+#include <flecs_systems_sdl2.h>
 
 /* Headers of private dependencies */
 #ifdef ECS_NBODY_IMPL
 /* No dependencies */
 #endif
-#endif
 
 /* Convenience macro for exporting symbols */
 #ifndef ECS_NBODY_STATIC
-  #if ECS_NBODY_IMPL && defined _MSC_VER
+  #if ECS_NBODY_IMPL && (defined(_MSC_VER) || defined(__MINGW32__))
     #define ECS_NBODY_EXPORT __declspec(dllexport)
   #elif ECS_NBODY_IMPL
     #define ECS_NBODY_EXPORT __attribute__((__visibility__("default")))
