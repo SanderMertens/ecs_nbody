@@ -182,7 +182,7 @@ int main(int argc, char *argv[]) {
     ECS_SYSTEM(world, GravityComputeForce, EcsManual, EcsPosition2D, Mass);
 
     /* System that iterates over all entities, and adds force to the velocity */
-    ECS_SYSTEM(world, Gravity, EcsOnUpdate, EcsPosition2D, EcsVelocity2D, Mass, ID.GravityComputeForce);
+    ECS_SYSTEM(world, Gravity, EcsOnUpdate, EcsPosition2D, EcsVelocity2D, Mass, .GravityComputeForce);
 
     /* System that updates the position of the entities */
     ECS_SYSTEM(world, Move, EcsOnUpdate, EcsPosition2D, EcsVelocity2D);
