@@ -12,9 +12,15 @@
             "flecs.components.geometry",
             "flecs.components.graphics",
             "flecs.systems.sdl2"
-        ]
+        ],
+        "use-bundle": ["flecs.hub:default"]
     },
     "lang.c": {
         "lib": ["m"]
+    },
+    "bundle": {
+        "repositories": {
+            "flecs.hub": "https://github.com/flecs-hub/flecs-hub"
+        }
     }
 }
