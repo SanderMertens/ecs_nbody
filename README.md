@@ -24,11 +24,10 @@ On Debian/Ubuntu:
 sudo apt-get install sdl2
 ```
 
-To install and run the demo, do:
+To run the demo, do:
 
 ```
-bake clone SanderMertens/ecs_nbody
-bake run ecs_nbody
+bake run SanderMertens/ecs_nbody
 ```
 
 ## Overview
