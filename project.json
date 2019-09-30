@@ -13,6 +13,11 @@
             "flecs.components.graphics",
             "flecs.systems.sdl2"
         ],
+        "use-runtime": [
+            "flecs.components.http",
+            "flecs.systems.civetweb",
+            "flecs.systems.admin"
+        ],
         "use-bundle": ["flecs.hub:default"]
     },
     "lang.c": {
