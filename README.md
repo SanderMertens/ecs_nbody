@@ -30,6 +30,12 @@ To run the demo, do:
 bake run SanderMertens/ecs_nbody
 ```
 
+To run the demo with the Flecs web dashboard enabled, do:
+
+```
+bake run SanderMertens/ecs_nbody -a --admin 9090
+```
+
 ## Overview
 The n-body algorithm computes how n objects will move under the effect of a physical force, like gravity. The resulting acceleration of the forces acting upon the objects causes the objects to move. This project contains a simple implementation of the nbody algorithm, where for every object, the sum of the forces acting upon that object is computed.
 
